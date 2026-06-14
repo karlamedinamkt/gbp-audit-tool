@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Google Business Profile Audit Tool</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --card:#171a21;
+    --card2:#1f2330;
+    --accent:#4f8cff;
+    --accent2:#36d399;
+    --warn:#ffb020;
+    --bad:#ff5d5d;
+    --text:#eef1f6;
+    --muted:#9aa4b2;
+    --border:#2b303d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,#0f1115 0%,#161922 100%);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{
+    width:100%;
+    max-width:680px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:32px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .logo-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .logo-dot{
+    width:14px;height:14px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    flex-shrink:0;
+  }
+  .logo-row span{font-weight:700;font-size:14px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;}
+  h1{font-size:28px;line-height:1.3;margin-bottom:8px;}
+  h2{font-size:20px;margin-bottom:6px;}
+  p.sub{color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:24px;}
+  .progress-bar{
+    height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:28px;
+  }
+  .progress-fill{
+    height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border-radius:99px;transition:width .35s ease;
+  }
+  label{
+    display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;margin-top:16px;
+  }
+  label:first-of-type{margin-top:0;}
+  input[type=text],input[type=email],input[type=tel],input[type=url]{
+    width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);
+    background:var(--card2);color:var(--text);font-size:15px;outline:none;
+    transition:border-color .15s;
+  }
+  input:focus{border-color:var(--accent);}
+  .options{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+  .opt{
+    display:flex;align-items:center;gap:12px;
+    border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+    background:var(--card2);cursor:pointer;transition:all .15s;
+    font-size:15px;
+  }
+  .opt:hover{border-color:var(--accent);}
+  .opt.selected{border-color:var(--accent);background:rgba(79,140,255,.12);}
+  .opt input{display:none;}
+  .opt .radio{
+    width:18px;height:18px;border-radius:50%;border:2px solid var(--muted);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .opt.selected .radio{border-color:var(--accent);}
+  .opt.selected .radio::after{
+    content:'';width:9px;height:9px;border-radius:50%;background:var(--accent);
+  }
+  .btn-row{display:flex;justify-content:space-between;gap:12px;margin-top:28px;}
+  button{
+    border:none;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:600;
+    cursor:pointer;transition:all .15s;font-family:inherit;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#06121f;flex:1;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;filter:none;}
+  .btn-ghost{
+    background:transparent;color:var(--muted);border:1px solid var(--border);
+  }
+  .btn-ghost:hover{color:var(--text);border-color:var(--muted);}
+  .q-count{font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+  .hidden{display:none;}
+
+  /* results */
+  .score-wrap{display:flex;align-items:center;gap:24px;margin-bottom:24px;flex-wrap:wrap;}
+  .score-circle{
+    width:120px;height:120px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    border:6px solid var(--card2);position:relative;flex-shrink:0;
+  }
+  .score-circle .num{font-size:34px;font-weight:800;}
+  .score-circle .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  .verdict h2{margin-bottom:8px;}
+  .verdict p{color:var(--muted);font-size:14px;line-height:1.6;}
+
+  .findings{margin-top:8px;}
+  .finding{
+    display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);
+  }
+  .finding:last-child{border-bottom:none;}
+  .finding .icon{
+    width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:800;margin-top:2px;
+  }
+  .finding .icon.good{background:rgba(54,211,153,.15);color:var(--accent2);}
+  .finding .icon.warn{background:rgba(255,176,32,.15);color:var(--warn);}
+  .finding .icon.bad{background:rgba(255,93,93,.15);color:var(--bad);}
+  .finding .body strong{display:block;font-size:14.5px;margin-bottom:3px;}
+  .finding .body span{font-size:13.5px;color:var(--muted);line-height:1.5;}
+
+  /* offer */
+  .offer-section{margin-top:32px;border-top:1px solid var(--border);padding-top:28px;}
+  .offer-section .tag{
+    display:inline-block;background:rgba(79,140,255,.15);color:var(--accent);
+    font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:5px 10px;border-radius:6px;margin-bottom:14px;
+  }
+  .offer-cards{display:flex;flex-direction:column;gap:14px;margin-top:14px;}
+  .offer-card{
+    border:1px solid var(--border);border-radius:14px;padding:20px;background:var(--card2);
+  }
+  .offer-card.featured{border-color:var(--accent);background:linear-gradient(135deg,rgba(79,140,255,.08),rgba(54,211,153,.05));}
+  .offer-card h3{font-size:17px;margin-bottom:6px;}
+  .offer-card .price{font-size:24px;font-weight:800;color:var(--accent2);margin:6px 0 10px;}
+  .offer-card .price span{font-size:13px;color:var(--muted);font-weight:500;}
+  .offer-card ul{margin:10px 0 14px 18px;color:var(--muted);font-size:13.5px;line-height:1.7;}
+  .offer-card a.cta{
+    display:inline-block;text-decoration:none;text-align:center;width:100%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#06121f;font-weight:700;padding:12px;border-radius:10px;font-size:14.5px;
+  }
+  .offer-card a.cta.secondary{
+    background:transparent;border:1px solid var(--accent);color:var(--accent);
+  }
+  footer.small{
+    margin-top:24px;text-align:center;color:var(--muted);font-size:12.5px;
+  }
+  .restart-link{
+    text-align:center;margin-top:18px;
+  }
+  .restart-link a{color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+
+    <div class="logo-row"><div class="logo-dot"></div><span>GBP Visibility Check</span></div>
+
+    <!-- STEP: INTRO -->
+    <div id="step-intro">
+      <h1>Is your Google Business Profile losing you customers?</h1>
+      <p class="sub">Take this free 2-minute audit to find out exactly where your Google Business Profile is costing you visibility, calls, and customers — plus get a personalized action plan.</p>
+      <button class="btn-primary" style="width:100%" onclick="goTo('lead')">Start My Free Audit →</button>
+      <footer class="small">No spam. Your info is only used to send your results and a free action plan.</footer>
+    </div>
+
+    <!-- STEP: LEAD CAPTURE -->
+    <div id="step-lead" class="hidden">
+      <h2>Where should we send your results?</h2>
+      <p class="sub" style="margin-bottom:18px;">We'll generate your audit instantly on this page, and email you a copy of your personalized report.</p>
+
+      <label for="f-name">Your Name *</label>
+      <input type="text" id="f-name" placeholder="Jane Smith" required>
+
+      <label for="f-email">Email Address *</label>
+      <input type="email" id="f-email" placeholder="jane@yourbusiness.com" required>
+
+      <label for="f-business">Business Name *</label>
+      <input type="text" id="f-business" placeholder="Smith's Auto Repair" required>
+
+      <label for="f-phone">Phone Number</label>
+      <input type="tel" id="f-phone" placeholder="(555) 123-4567">
+
+      <label for="f-gbp">Google Business Profile / Website URL</label>
+      <input type="url" id="f-gbp" placeholder="https://g.page/yourbusiness or your website">
+
+      <div class="btn-row">
+        <button class="btn-ghost" onclick="goTo('intro')">Back</button>
+        <button class="btn-primary" id="lead-next" onclick="submitLead()">Continue to Audit →</button>
+      </div>
+    </div>
+
+    <!-- STEP: QUESTIONS -->
+    <div id="step-questions" class="hidden">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="q-count" id="q-count">Question 1 of 12</div>
+      <h2 id="q-title"></h2>
+      <p class="sub" id="q-sub"></p>
+      <div class="options" id="q-options"></div>
+      <div class="btn-row">
+        <button class="btn-ghost" onclick="prevQuestion()">Back</button>
+        <button class="btn-primary" id="next-btn" disabled onclick="nextQuestion()">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP: RESULTS -->
+    <div id="step-results" class="hidden">
+      <div class="score-wrap">
+        <div class="score-circle" id="score-circle">
+          <div class="num" id="score-num">--</div>
+          <div class="lbl">/ 100</div>
+        </div>
+        <div class="verdict">
+          <h2 id="verdict-title"></h2>
+          <p id="verdict-text"></p>
+        </div>
+      </div>
+
+      <h2 style="font-size:16px;margin-bottom:4px;">Your Personalized Findings</h2>
+      <div class="findings" id="findings"></div>
+
+      <div class="offer-section">
+        <span class="tag">Recommended Next Step</span>
+        <h2 id="offer-name">Hi there 👋, here's how I can help</h2>
+        <p class="sub" style="margin-bottom:0;">Based on your results, here are two ways we can fix this — pick whichever fits where your business is right now.</p>
+
+        <div class="offer-cards">
+          <div class="offer-card">
+            <h3>⚡ 1-Hour Live GBP Optimization Call</h3>
+            <div class="price">$37 <span>/ one-time, 60 minutes</span></div>
+            <p style="color:var(--muted);font-size:13.5px;">Get on a live screen-share call with me. We'll fix your biggest issues together in real time — categories, photos, description, posts, and quick wins you can keep doing yourself.</p>
+            <ul>
+              <li>Live, hands-on optimization session</li>
+              <li>Personalized action checklist to keep</li>
+              <li>Best if you want to DIY going forward</li>
+            </ul>
+            <a class="cta secondary" id="cta-call" href="#" target="_blank" rel="noopener">Book My $37 Optimization Call</a>
+          </div>
+
+          <div class="offer-card featured">
+            <h3>🚀 Full Local Growth Management</h3>
+            <div class="price">$400 <span>/ month — 1 location</span></div>
+            <p style="color:var(--muted);font-size:13.5px;">Done-for-you. I manage and grow your entire local presence so you can focus on running your business.</p>
+            <ul>
+              <li>Full Google Business Profile management</li>
+              <li>Website maintenance & updates</li>
+              <li>Basic SEO (on-page + local)</li>
+              <li>AIO &amp; GEO — optimization for AI search engines (ChatGPT, Gemini, AI Overviews)</li>
+              <li>Monthly reporting & strategy</li>
+            </ul>
+            <a class="cta" id="cta-manage" href="#" target="_blank" rel="noopener">Get Full Management — $400/mo</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="restart-link"><a onclick="restart()">Run another audit</a></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ---------------- CONFIG ---------------- */
+// TODO: replace with your real booking links / contact endpoints
+const CALL_BOOKING_URL = "mailto:kmmarketingonline@gmail.com?subject=Book%20my%20%2437%20GBP%20Optimization%20Call";
+const MANAGEMENT_URL   = "mailto:kmmarketingonline@gmail.com?subject=Interested%20in%20Full%20GBP%20Management%20(%24400%2Fmo)";
+// Optional: point this at a form backend (e.g. Formspree, Zapier webhook) to receive leads
+const LEAD_WEBHOOK_URL = ""; // e.g. "https://formspree.io/f/XXXXXXX"
+
+/* ---------------- QUESTIONS ---------------- */
+const questions = [
+  {
+    key: "name",
+    title: "Does your Google Business Profile name match your real business name exactly?",
+    sub: "No extra keywords, locations, or services stuffed into the name — just your actual business name.",
+    options: [
+      { label: "Yes, it's exactly our real business name", score: 10 },
+      { label: "It has some extra keywords added", score: 4 },
+      { label: "Not sure / never checked", score: 1 }
+    ]
+  },
+  {
+    key: "categories",
+    title: "Have you chosen the most accurate primary category, plus relevant secondary categories?",
+    sub: "Categories tell Google (and AI search) exactly who to show your business to.",
+    options: [
+      { label: "Yes, primary + multiple relevant secondary categories", score: 10 },
+      { label: "I have a primary category but no/few secondary ones", score: 5 },
+      { label: "Not sure what categories are set", score: 1 }
+    ]
+  },
+  {
+    key: "description",
+    title: "Do you have a complete business description with your services and keywords?",
+    sub: "A full ~750-character description helps Google understand and rank your profile.",
+    options: [
+      { label: "Yes, fully written and keyword-rich", score: 10 },
+      { label: "It's short or generic", score: 5 },
+      { label: "It's empty / default", score: 0 }
+    ]
+  },
+  {
+    key: "hours",
+    title: "Are your business hours — including holiday/special hours — accurate right now?",
+    sub: "Wrong hours are one of the top reasons people choose a competitor instead.",
+    options: [
+      { label: "Yes, always kept up to date", score: 8 },
+      { label: "Mostly, but holidays aren't updated", score: 4 },
+      { label: "Not sure / probably outdated", score: 0 }
+    ]
+  },
+  {
+    key: "photos",
+    title: "Do you upload new photos or videos at least once a month?",
+    sub: "Profiles with fresh, frequent photos get significantly more clicks and direction requests.",
+    options: [
+      { label: "Yes, monthly or more often", score: 10 },
+      { label: "Occasionally, every few months", score: 5 },
+      { label: "Rarely or never", score: 0 }
+    ]
+  },
+  {
+    key: "posts",
+    title: "Do you publish Google Posts (offers, updates, events)?",
+    sub: "Posts keep your profile active and give Google fresh signals to rank you higher.",
+    options: [
+      { label: "Yes, weekly or close to it", score: 10 },
+      { label: "Occasionally", score: 4 },
+      { label: "Never posted", score: 0 }
+    ]
+  },
+  {
+    key: "reviews",
+    title: "Do you actively get new reviews AND respond to all of them (good and bad)?",
+    sub: "Review volume, recency, and response rate are major local ranking factors.",
+    options: [
+      { label: "Yes, steady new reviews + we respond to all", score: 12 },
+      { label: "We get reviews but rarely respond", score: 6 },
+      { label: "Few/no reviews and we don't respond", score: 0 }
+    ]
+  },
+  {
+    key: "attributes",
+    title: "Have you filled out your profile's Attributes (accessibility, amenities, highlights, etc.)?",
+    sub: "Most owners never touch this — these details help you match more searches and give AI tools richer info to summarize.",
+    options: [
+      { label: "Yes, fully filled out and kept current", score: 8 },
+      { label: "Some are filled out", score: 3 },
+      { label: "Empty / never looked at it", score: 0 }
+    ]
+  },
+  {
+    key: "products",
+    title: "Have you listed your products/services with descriptions and prices?",
+    sub: "This section shows up directly in search and helps both customers and AI tools understand your offerings.",
+    options: [
+      { label: "Yes, fully filled out", score: 10 },
+      { label: "Partially filled out", score: 5 },
+      { label: "Not set up", score: 0 }
+    ]
+  },
+  {
+    key: "messaging",
+    title: "Is messaging or a booking/appointment link enabled and actively monitored?",
+    sub: "Unanswered messages and dead booking links quietly cost you leads every week.",
+    options: [
+      { label: "Yes, enabled and checked daily", score: 8 },
+      { label: "Enabled but rarely checked", score: 3 },
+      { label: "Not enabled", score: 0 }
+    ]
+  },
+  {
+    key: "nap",
+    title: "Is your business Name, Address, and Phone (NAP) identical across your website, GBP, and other directories (Yelp, Facebook, etc.)?",
+    sub: "Inconsistent NAP info confuses Google and hurts your local rankings.",
+    options: [
+      { label: "Yes, fully consistent everywhere", score: 8 },
+      { label: "Mostly, with a few mismatches", score: 4 },
+      { label: "Not sure / likely inconsistent", score: 0 }
+    ]
+  },
+  {
+    key: "geo",
+    title: "Is your website optimized so AI tools (ChatGPT, Gemini, AI Overviews) can find and recommend your business?",
+    sub: "This is 'Generative Engine Optimization' (GEO) — structured data, FAQ content, and clear service pages that AI models can read and cite.",
+    options: [
+      { label: "Yes, we've done this", score: 6 },
+      { label: "Not sure what this is", score: 2 },
+      { label: "No, nothing has been done", score: 0 }
+    ]
+  }
+];
+
+const maxScore = questions.reduce((sum, q) => sum + Math.max(...q.options.map(o=>o.score)), 0);
+
+/* ---------------- STATE ---------------- */
+let currentQ = 0;
+let answers = {};
+let leadData = {};
+
+/* ---------------- NAV ---------------- */
+function goTo(step){
+  document.querySelectorAll('[id^="step-"]').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('step-'+step).classList.remove('hidden');
+}
+
+function submitLead(){
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const business = document.getElementById('f-business').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const gbp = document.getElementById('f-gbp').value.trim();
+
+  if(!name || !email || !business){
+    alert('Please fill in your name, email, and business name.');
+    return;
+  }
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!emailOk){
+    alert('Please enter a valid email address.');
+    return;
+  }
+
+  leadData = { name, email, business, phone, gbp, timestamp: new Date().toISOString() };
+
+  // Optional: send to webhook if configured
+  if(LEAD_WEBHOOK_URL){
+    fetch(LEAD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(leadData)
+    }).catch(()=>{ /* fail silently, don't block the user */ });
+  }
+
+  try{ localStorage.setItem('gbpAuditLead', JSON.stringify(leadData)); }catch(e){}
+
+  currentQ = 0;
+  answers = {};
+  renderQuestion();
+  goTo('questions');
+}
+
+/* ---------------- QUESTIONS ---------------- */
+function renderQuestion(){
+  const q = questions[currentQ];
+  document.getElementById('q-count').textContent = `Question ${currentQ+1} of ${questions.length}`;
+  document.getElementById('progress-fill').style.width = `${(currentQ/questions.length)*100}%`;
+  document.getElementById('q-title').textContent = q.title;
+  document.getElementById('q-sub').textContent = q.sub;
+
+  const optsWrap = document.getElementById('q-options');
+  optsWrap.innerHTML = '';
+  q.options.forEach((opt, i)=>{
+    const div = document.createElement('label');
+    div.className = 'opt' + (answers[q.key] === i ? ' selected' : '');
+    div.innerHTML = `<span class="radio"></span><span>${opt.label}</span>`;
+    div.onclick = ()=>{
+      answers[q.key] = i;
+      document.querySelectorAll('#q-options .opt').forEach(o=>o.classList.remove('selected'));
+      div.classList.add('selected');
+      document.getElementById('next-btn').disabled = false;
+    };
+    optsWrap.appendChild(div);
+  });
+
+  document.getElementById('next-btn').disabled = !(q.key in answers);
+  document.getElementById('next-btn').textContent = currentQ === questions.length-1 ? 'See My Results →' : 'Next →';
+}
+
+function nextQuestion(){
+  if(currentQ < questions.length-1){
+    currentQ++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function prevQuestion(){
+  if(currentQ > 0){
+    currentQ--;
+    renderQuestion();
+  } else {
+    goTo('lead');
+  }
+}
+
+/* ---------------- RESULTS ---------------- */
+function showResults(){
+  let total = 0;
+  questions.forEach(q=>{
+    const idx = answers[q.key];
+    total += q.options[idx].score;
+  });
+  const pct = Math.round((total/maxScore)*100);
+
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('score-num').textContent = pct;
+
+  const circle = document.getElementById('score-circle');
+  let color, title, text;
+  if(pct >= 85){
+    color = 'var(--accent2)';
+    title = 'Excellent — you\'re ahead of most local businesses';
+    text = `${leadData.business} is doing a lot right. A few small tweaks could push you to the very top of local search and AI results.`;
+  } else if(pct >= 60){
+    color = 'var(--accent)';
+    title = 'Good, but you\'re leaving leads on the table';
+    text = `${leadData.business} has a solid foundation, but there are clear gaps that competitors are likely beating you on right now.`;
+  } else if(pct >= 35){
+    color = 'var(--warn)';
+    title = 'Needs Optimization — visibility is being lost';
+    text = `${leadData.business}'s profile is under-optimized. This is actively costing you calls, clicks, and customers to competitors nearby.`;
+  } else {
+    color = 'var(--bad)';
+    title = 'Critical — your profile is invisible to most searches';
+    text = `${leadData.business}'s Google Business Profile has major gaps. This is likely the single biggest opportunity to grow your business right now.`;
+  }
+  circle.style.borderColor = color;
+  document.getElementById('verdict-title').textContent = title;
+  document.getElementById('verdict-text').textContent = text;
+
+  // findings
+  const findingsEl = document.getElementById('findings');
+  findingsEl.innerHTML = '';
+  questions.forEach(q=>{
+    const idx = answers[q.key];
+    const opt = q.options[idx];
+    const maxOptScore = Math.max(...q.options.map(o=>o.score));
+    let level, icon;
+    if(opt.score === maxOptScore){ level='good'; icon='✓'; }
+    else if(opt.score === 0){ level='bad'; icon='!'; }
+    else { level='warn'; icon='–'; }
+
+    const div = document.createElement('div');
+    div.className = 'finding';
+    div.innerHTML = `
+      <div class="icon ${level}">${icon}</div>
+      <div class="body">
+        <strong>${q.title}</strong>
+        <span>Your answer: "${opt.label}"${level!=='good' ? ' — ' + getTip(q.key, level) : ''}</span>
+      </div>`;
+    findingsEl.appendChild(div);
+  });
+
+  document.getElementById('offer-name').textContent = `Hi ${leadData.name.split(' ')[0]} 👋, here's how I can help`;
+
+  // pre-fill CTA links with lead context
+  const subjBase = encodeURIComponent(`${leadData.business} - GBP Audit Score: ${pct}/100`);
+  document.getElementById('cta-call').href = CALL_BOOKING_URL + `&body=${subjBase}`;
+  document.getElementById('cta-manage').href = MANAGEMENT_URL + `&body=${subjBase}`;
+
+  goTo('results');
+}
+
+function getTip(key, level){
+  const tips = {
+    name: "an inaccurate name can trigger Google reviews/suspensions and hurts trust.",
+    categories: "wrong categories mean you don't show up for the searches that matter most.",
+    description: "a weak description means Google has less context to match you to searches.",
+    hours: "incorrect hours drive customers straight to a competitor that's 'open now'.",
+    photos: "stale photos make your business look closed or untrustworthy.",
+    posts: "no posts = a 'quiet' profile that Google deprioritizes.",
+    reviews: "review signals are one of the top 3 local ranking factors.",
+    attributes: "missing attributes mean you're not surfacing in filtered searches (e.g. 'wheelchair accessible', 'outdoor seating') or AI summaries.",
+    products: "missing service listings = missed visibility in search and AI answers.",
+    messaging: "slow responses lose hot leads to faster competitors.",
+    nap: "inconsistent info confuses Google's local ranking algorithm.",
+    geo: "AI assistants won't recommend a business they can't clearly understand."
+  };
+  return tips[key] || "this is an easy win to fix.";
+}
+
+function restart(){
+  currentQ = 0;
+  answers = {};
+  goTo('intro');
+}
+</script>
+</body>
+</html>

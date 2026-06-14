@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free AI Google Business Profile Audit</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --card:#171a21;
+    --card2:#1f2330;
+    --accent:#4f8cff;
+    --accent2:#36d399;
+    --warn:#ffb020;
+    --bad:#ff5d5d;
+    --muted2:#7d8b9c;
+    --text:#eef1f6;
+    --muted:#9aa4b2;
+    --border:#2b303d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,#0f1115 0%,#161922 100%);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .wrap{width:100%;max-width:680px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:32px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .logo-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .logo-dot{width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));flex-shrink:0;}
+  .logo-row span{font-weight:700;font-size:14px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;}
+  h1{font-size:28px;line-height:1.3;margin-bottom:8px;}
+  h2{font-size:20px;margin-bottom:6px;}
+  p.sub{color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:24px;}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;margin-top:16px;}
+  label:first-of-type{margin-top:0;}
+  input[type=text],input[type=email],input[type=tel],input[type=url]{
+    width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);
+    background:var(--card2);color:var(--text);font-size:15px;outline:none;
+    transition:border-color .15s;
+  }
+  input:focus{border-color:var(--accent);}
+  .hint{font-size:12.5px;color:var(--muted2);margin-top:6px;line-height:1.5;}
+  .btn-row{display:flex;justify-content:space-between;gap:12px;margin-top:28px;}
+  button{border:none;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#06121f;flex:1;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;filter:none;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--muted);}
+  .hidden{display:none;}
+
+  /* loading */
+  .loading{text-align:center;padding:30px 0;}
+  .spinner{
+    width:46px;height:46px;border-radius:50%;
+    border:4px solid var(--border);border-top-color:var(--accent);
+    animation:spin 0.9s linear infinite;margin:0 auto 20px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-step{color:var(--muted);font-size:14px;margin-top:8px;}
+
+  /* results */
+  .score-wrap{display:flex;align-items:center;gap:24px;margin-bottom:24px;flex-wrap:wrap;}
+  .score-circle{
+    width:120px;height:120px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    border:6px solid var(--card2);position:relative;flex-shrink:0;
+  }
+  .score-circle .num{font-size:34px;font-weight:800;}
+  .score-circle .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  .verdict p{color:var(--muted);font-size:14px;line-height:1.6;}
+  .biz-meta{font-size:13px;color:var(--muted2);margin-bottom:18px;line-height:1.6;}
+
+  .findings{margin-top:8px;}
+  .finding{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);}
+  .finding:last-child{border-bottom:none;}
+  .finding .icon{
+    width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:800;margin-top:2px;
+  }
+  .finding .icon.good{background:rgba(54,211,153,.15);color:var(--accent2);}
+  .finding .icon.warn{background:rgba(255,176,32,.15);color:var(--warn);}
+  .finding .icon.bad{background:rgba(255,93,93,.15);color:var(--bad);}
+  .finding .icon.unknown{background:rgba(154,164,178,.15);color:var(--muted);}
+  .finding .body strong{display:block;font-size:14.5px;margin-bottom:3px;}
+  .finding .body span{font-size:13.5px;color:var(--muted);line-height:1.5;}
+
+  /* offer */
+  .offer-section{margin-top:32px;border-top:1px solid var(--border);padding-top:28px;}
+  .offer-section .tag{
+    display:inline-block;background:rgba(79,140,255,.15);color:var(--accent);
+    font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:5px 10px;border-radius:6px;margin-bottom:14px;
+  }
+  .offer-cards{display:flex;flex-direction:column;gap:14px;margin-top:14px;}
+  .offer-card{border:1px solid var(--border);border-radius:14px;padding:20px;background:var(--card2);}
+  .offer-card.featured{border-color:var(--accent);background:linear-gradient(135deg,rgba(79,140,255,.08),rgba(54,211,153,.05));}
+  .offer-card h3{font-size:17px;margin-bottom:6px;}
+  .offer-card .price{font-size:24px;font-weight:800;color:var(--accent2);margin:6px 0 10px;}
+  .offer-card .price span{font-size:13px;color:var(--muted);font-weight:500;}
+  .offer-card ul{margin:10px 0 14px 18px;color:var(--muted);font-size:13.5px;line-height:1.7;}
+  .offer-card a.cta{
+    display:inline-block;text-decoration:none;text-align:center;width:100%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#06121f;font-weight:700;padding:12px;border-radius:10px;font-size:14.5px;
+  }
+  .offer-card a.cta.secondary{background:transparent;border:1px solid var(--accent);color:var(--accent);}
+  footer.small{margin-top:24px;text-align:center;color:var(--muted);font-size:12.5px;}
+  .restart-link{text-align:center;margin-top:18px;}
+  .restart-link a{color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;}
+  .error-box{
+    background:rgba(255,93,93,.1);border:1px solid rgba(255,93,93,.3);color:#ffb3b3;
+    border-radius:10px;padding:14px;font-size:14px;margin-top:16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+
+    <div class="logo-row"><div class="logo-dot"></div><span>AI GBP Audit</span></div>
+
+    <!-- STEP: INTRO + LEAD FORM -->
+    <div id="step-form">
+      <h1>Get a real, AI-powered audit of your Google Business Profile</h1>
+      <p class="sub">Paste your Google Maps link below. We'll pull your actual profile data — reviews, photos, hours, categories, website SEO — and have AI generate a personalized report with what's hurting your visibility and exactly how to fix it.</p>
+
+      <label for="f-name">Your Name *</label>
+      <input type="text" id="f-name" placeholder="Jane Smith" required>
+
+      <label for="f-email">Email Address *</label>
+      <input type="email" id="f-email" placeholder="jane@yourbusiness.com" required>
+
+      <label for="f-business">Business Name *</label>
+      <input type="text" id="f-business" placeholder="Smith's Auto Repair" required>
+
+      <label for="f-phone">Phone Number</label>
+      <input type="tel" id="f-phone" placeholder="(555) 123-4567">
+
+      <label for="f-maps">Google Maps Link to Your Business *</label>
+      <input type="url" id="f-maps" placeholder="https://maps.app.goo.gl/..." required>
+      <div class="hint">On Google Maps, search your business → tap "Share" → copy the link, then paste it here.</div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="run-audit-btn" style="width:100%" onclick="runAudit()">Run My Free AI Audit →</button>
+      </div>
+      <div id="error-box" class="error-box hidden"></div>
+      <footer class="small">No spam. Your info is only used to send your audit results.</footer>
+    </div>
+
+    <!-- STEP: LOADING -->
+    <div id="step-loading" class="hidden">
+      <div class="loading">
+        <div class="spinner"></div>
+        <h2>Scanning your Google Business Profile…</h2>
+        <p class="loading-step">Pulling reviews, photos, hours, categories and checking your website. This usually takes 10–20 seconds.</p>
+      </div>
+    </div>
+
+    <!-- STEP: RESULTS -->
+    <div id="step-results" class="hidden">
+      <div class="score-wrap">
+        <div class="score-circle" id="score-circle">
+          <div class="num" id="score-num">--</div>
+          <div class="lbl">/ 100</div>
+        </div>
+        <div class="verdict">
+          <h2 id="verdict-title"></h2>
+          <p id="verdict-text"></p>
+        </div>
+      </div>
+      <div class="biz-meta" id="biz-meta"></div>
+
+      <h2 style="font-size:16px;margin-bottom:4px;">Your Audit Findings</h2>
+      <div class="findings" id="findings"></div>
+
+      <div class="offer-section">
+        <span class="tag">Recommended Next Step</span>
+        <h2 id="offer-name">Here's how I can help</h2>
+        <p class="sub" style="margin-bottom:0;">A few items above can only be checked live (description, posts, messaging). Here's how we fix everything — pick whichever fits where your business is right now.</p>
+
+        <div class="offer-cards">
+          <div class="offer-card">
+            <h3>⚡ 1-Hour Live GBP Optimization Call</h3>
+            <div class="price">$37 <span>/ one-time, 60 minutes</span></div>
+            <p style="color:var(--muted);font-size:13.5px;">Get on a live screen-share call with me. We'll fix your biggest issues together in real time — categories, photos, description, posts, and quick wins you can keep doing yourself.</p>
+            <ul>
+              <li>Live, hands-on optimization session</li>
+              <li>Personalized action checklist to keep</li>
+              <li>Best if you want to DIY going forward</li>
+            </ul>
+            <a class="cta secondary" id="cta-call" href="#" target="_blank" rel="noopener">Book My $37 Optimization Call</a>
+          </div>
+
+          <div class="offer-card featured">
+            <h3>🚀 Full Local Growth Management</h3>
+            <div class="price">$400 <span>/ month — 1 location</span></div>
+            <p style="color:var(--muted);font-size:13.5px;">Done-for-you. I manage and grow your entire local presence so you can focus on running your business.</p>
+            <ul>
+              <li>Full Google Business Profile management</li>
+              <li>Website maintenance & updates</li>
+              <li>Basic SEO (on-page + local)</li>
+              <li>AIO &amp; GEO — optimization for AI search engines (ChatGPT, Gemini, AI Overviews)</li>
+              <li>Monthly reporting & strategy</li>
+            </ul>
+            <a class="cta" id="cta-manage" href="#" target="_blank" rel="noopener">Get Full Management — $400/mo</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="restart-link"><a onclick="restart()">Run another audit</a></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// TODO: replace with your real booking links / contact endpoints
+const CALL_BOOKING_URL = "mailto:kmmarketingonline@gmail.com?subject=Book%20my%20%2437%20GBP%20Optimization%20Call";
+const MANAGEMENT_URL   = "mailto:kmmarketingonline@gmail.com?subject=Interested%20in%20Full%20GBP%20Management%20(%24400%2Fmo)";
+
+function goTo(step){
+  document.querySelectorAll('[id^="step-"]').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('step-'+step).classList.remove('hidden');
+}
+
+function showError(msg){
+  const box = document.getElementById('error-box');
+  box.textContent = msg;
+  box.classList.remove('hidden');
+}
+
+async function runAudit(){
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const business = document.getElementById('f-business').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const mapsUrl = document.getElementById('f-maps').value.trim();
+
+  document.getElementById('error-box').classList.add('hidden');
+
+  if(!name || !email || !business || !mapsUrl){
+    showError('Please fill in your name, email, business name, and Google Maps link.');
+    return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    showError('Please enter a valid email address.');
+    return;
+  }
+
+  goTo('loading');
+
+  try{
+    const resp = await fetch('/api/audit', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name, email, business, phone, mapsUrl })
+    });
+    const data = await resp.json();
+
+    if(!resp.ok){
+      goTo('form');
+      showError(data.error || 'Something went wrong. Please try again.');
+      return;
+    }
+
+    renderResults(data);
+    goTo('results');
+  }catch(err){
+    goTo('form');
+    showError('Could not reach the audit service. Please try again in a moment.');
+  }
+}
+
+function renderResults(data){
+  const { lead, placeData, report } = data;
+  const pct = Math.max(0, Math.min(100, report.score));
+
+  document.getElementById('score-num').textContent = pct;
+
+  const colors = {
+    excellent: 'var(--accent2)',
+    good: 'var(--accent)',
+    needs_work: 'var(--warn)',
+    critical: 'var(--bad)'
+  };
+  document.getElementById('score-circle').style.borderColor = colors[report.verdict] || 'var(--accent)';
+  document.getElementById('verdict-title').textContent = report.verdictTitle;
+  document.getElementById('verdict-text').textContent = report.verdictText;
+
+  const b = placeData.business;
+  const r = placeData.reviews;
+  document.getElementById('biz-meta').textContent =
+    `${b.name} • ${b.primaryType || 'Business'} • ${r.rating ? r.rating + '★ (' + r.totalReviews + ' reviews)' : 'No ratings found'} • ${placeData.profileCompleteness.photoCount} photos`;
+
+  const findingsEl = document.getElementById('findings');
+  findingsEl.innerHTML = '';
+  const icons = { good: '✓', warn: '–', bad: '!', unknown: '?' };
+  (report.findings || []).forEach(f=>{
+    const div = document.createElement('div');
+    div.className = 'finding';
+    div.innerHTML = `
+      <div class="icon ${f.status}">${icons[f.status] || '?'}</div>
+      <div class="body">
+        <strong>${f.title}</strong>
+        <span>${f.detail}</span>
+      </div>`;
+    findingsEl.appendChild(div);
+  });
+
+  document.getElementById('offer-name').textContent = `Hi ${lead.name.split(' ')[0]} 👋, here's how I can help`;
+
+  const subjBase = encodeURIComponent(`${lead.business} - GBP Audit Score: ${pct}/100`);
+  document.getElementById('cta-call').href = CALL_BOOKING_URL + `&body=${subjBase}`;
+  document.getElementById('cta-manage').href = MANAGEMENT_URL + `&body=${subjBase}`;
+}
+
+function restart(){
+  goTo('form');
+}
+</script>
+</body>
+</html>
