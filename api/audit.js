@@ -91,6 +91,7 @@ export default async function handler(req, res) {
       return res.status(404).json({
         error:
           "We couldn't find that business on Google. Double-check the Maps link and try again.",
+        debug: { nameHint, lat, lng, searchData },
       });
     }
 
